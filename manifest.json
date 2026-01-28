@@ -1,0 +1,21 @@
+{
+  "name": "VibeChord Studio",
+  "short_name": "VibeChord",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "description": "Studio de composition de guitare assisté par IA.",
+  "icons": [
+    {
+      "src": "https://cdn.lucide.dev/icon-library/guitar.svg",
+      "sizes": "192x192",
+      "type": "image/svg+xml"
+    },
+    {
+      "src": "https://cdn.lucide.dev/icon-library/guitar.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml"
+    }
+  ]
+}

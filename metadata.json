@@ -1,0 +1,8 @@
+{
+  "name": "Copy of Copy of 29VibeChord Pro Studio",
+  "description": "Interactive guitar chord studio with AI Vision coaching, real-time vibrations, and social video export.",
+  "requestFramePermissions": [
+    "microphone",
+    "camera"
+  ]
+}
