@@ -55,6 +55,40 @@ export const analyzeHandPosture = async (base64Image: string, chordName: string)
   }
 };
 
+// --- NEW: Generate Guitar Tone from Song/Artist ---
+export const generateToneFromDescription = async (query: string): Promise<any> => {
+  const ai = getAiClient();
+  const response = await ai.models.generateContent({
+    model: PRO_MODEL_ID,
+    contents: `Acting as a professional guitar tech, analyze the guitar tone of "${query}".
+    Map this tone to a digital rig configuration.
+    Return a JSON object matching this structure exactly:
+    {
+      "ampModel": "String enum: 'CLEAN_TWIN', 'CLEAN_JAZZ', 'CRUNCH_PLEXI', 'CRUNCH_AC30', 'HIGH_RECTO', 'HIGH_5150', 'METAL_DJENT'",
+      "settings": {
+         "gain": number (0.0 to 1.0),
+         "bass": number (-10 to 10),
+         "mid": number (-10 to 10),
+         "treble": number (-10 to 10),
+         "presence": number (0.0 to 1.0),
+         "volume": number (0.5 to 1.0)
+      },
+      "pedals": {
+         "drive": { "enabled": boolean, "level": number (0.0 to 1.0, gain of the pedal) },
+         "chorus": { "enabled": boolean, "mix": number (0.0 to 0.8), "rate": number (0.1 to 10), "depth": number (0 to 1) },
+         "delay": { "enabled": boolean, "mix": number (0.0 to 0.6), "time": "String: '8n', '4n', '8n.', '16n'", "feedback": number (0.0 to 0.9) },
+         "reverb": { "enabled": boolean, "mix": number (0.0 to 0.7), "decay": number (0.5 to 10) }
+      },
+      "description": "Short sentence explaining the choice (e.g. 'Scooped mids high gain with a touch of delay for the solo')."
+    }`,
+    config: {
+      responseMimeType: "application/json"
+    }
+  });
+
+  return JSON.parse(response.text);
+};
+
 // Fix: Generates a chord progression and guitar effects based on a text prompt
 export const generateChordProgression = async (prompt: string): Promise<{ chords: ChordData[], effects: GuitarEffects }> => {
   const ai = getAiClient();

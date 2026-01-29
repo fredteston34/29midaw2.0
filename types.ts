@@ -60,28 +60,97 @@ export interface SavedProgression {
 }
 
 export type InstrumentType = 'master' | 'guitar' | 'bass' | 'drums' | 'lead' | 'vocals';
-export type AmpModel = 'CLEAN' | 'TWEED' | 'CITRUS' | 'METAL' | 'BRITISH' | 'PLEXI' | 'BOUTIQUE' | 'ACOUSTIC_SIM';
+
+// Expanded Amp Models (30+) mapped to DSP Profiles
+export type AmpModel = 
+  | 'CLEAN_TWIN' | 'CLEAN_JAZZ' | 'CLEAN_BOUTIQUE' | 'CLEAN_MODERN'
+  | 'CRUNCH_TWEED' | 'CRUNCH_AC30' | 'CRUNCH_PLEXI' | 'CRUNCH_JCM800' | 'CRUNCH_ORANGE'
+  | 'HIGH_RECTO' | 'HIGH_5150' | 'HIGH_DIEZEL' | 'HIGH_SLO' | 'HIGH_INVADER'
+  | 'METAL_MODERN' | 'METAL_DJENT' | 'METAL_DOOM'
+  | 'ACOUSTIC_DREAD' | 'ACOUSTIC_JUMBO' | 'ACOUSTIC_NYLON'
+  | 'BASS_SVT' | 'BASS_B15';
+
+export type PickupType = 'OFF' | 'SINGLE_COIL' | 'HUMBUCKER' | 'P90' | 'ACTIVE' | 'ACOUSTIC';
+
+export interface AmpSettings {
+    model: AmpModel;
+    gain: number;
+    bass: number;
+    mid: number;
+    treble: number;
+    presence: number;
+    volume: number;
+    cabModel: string;
+}
 
 export interface GuitarEffects {
-  ampModel: AmpModel;
-  eq: { low: number; mid: number; high: number };
-  distortion: number;
-  chorus: number;
-  reverb: number;
-  delay: number;
+  // Global Input
+  noiseGateThreshold: number;
+  guitarMatch: {
+      enabled: boolean;
+      source: PickupType;
+      target: PickupType;
+  };
+
+  // Dual Path Routing
+  routingMode: 'SINGLE' | 'DUAL_PARALLEL';
+  pathAMix: number; // 0 to 1
+  pathBMix: number; // 0 to 1
+
+  // Path A
+  pathA: {
+      enabled: boolean;
+      amp: AmpSettings;
+      drive: number; // Boost pedal
+  };
+
+  // Path B (Optional)
+  pathB: {
+      enabled: boolean;
+      amp: AmpSettings;
+      drive: number;
+  };
+
+  // Post FX (Shared)
+  postFx: {
+      chorus: { enabled: boolean; depth: number; rate: number; mix: number };
+      delay: { enabled: boolean; time: string; feedback: number; mix: number };
+      reverb: { enabled: boolean; decay: number; mix: number };
+      eq: { enabled: boolean; low: number; mid: number; high: number };
+      order?: string[]; // ['chorus', 'delay', 'reverb', 'eq']
+  };
+
   masterGain: number;
-  noiseGateThreshold?: number; // Added for feedback control
+  
+  // Legacy support for older components (optional)
+  ampModel?: AmpModel; 
+  distortion?: number;
+  eq?: { low: number; mid: number; high: number };
+  chorus?: number;
+  reverb?: number;
+  delay?: number;
+}
+
+export type PresetCategory = 'CLEAN' | 'CRUNCH' | 'HIGH_GAIN' | 'AMBIENT' | 'BASS';
+
+export interface AmpPreset {
+    id: string;
+    name: string;
+    category: PresetCategory;
+    author: string;
+    date: number;
+    effects: GuitarEffects;
 }
 
 export interface AudioClip {
     id: string;
-    trackId: string; // Lien avec la piste DAW
+    trackId: string; 
     type: 'RECORDING' | 'IMPORT';
     url: string;
     name: string;
-    startBeat: number; // Position on timeline
-    duration: number; // Duration in beats
-    offset: number; // Start offset within the audio file
+    startBeat: number; 
+    duration: number; 
+    offset: number; 
     muted: boolean;
     color: string;
 }

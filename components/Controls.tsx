@@ -1,9 +1,10 @@
 
 import React, { useState, useRef } from 'react';
-import { Play, Square, RefreshCw, Plus, Wand2, Undo, Redo, Repeat, ArrowDown, ArrowUp, BrainCircuit, Disc, FolderHeart, Zap, Download, Loader2, Sliders, Mic, PenTool, Cable, FileAudio, Printer, Music2, HelpCircle, Eye, AlarmClock, AudioWaveform, XCircle, Monitor, Compass, FileOutput, Timer, History, Layers } from 'lucide-react';
+import { Play, Square, RefreshCw, Plus, Wand2, Undo, Redo, Repeat, ArrowDown, ArrowUp, BrainCircuit, Disc, FolderHeart, Zap, Download, Loader2, Sliders, Mic, PenTool, Cable, FileAudio, Printer, Music2, HelpCircle, Eye, AlarmClock, AudioWaveform, XCircle, Monitor, Compass, FileOutput, Timer, History, Layers, Circle } from 'lucide-react';
 import clsx from 'clsx';
 import { BackingTrackStyle } from '../types';
 import { Tooltip } from './Tooltip';
+import { startInputRecording, stopInputRecording } from '../services/audioService';
 
 interface ControlsProps {
   isPlaying: boolean;
@@ -28,14 +29,17 @@ interface ControlsProps {
   onOpenPedalboard?: () => void;
   onOpenLooper?: () => void; 
   onOpenTheory?: () => void;
+  onOpenHelp?: () => void;
+  onOpenJam?: () => void; // New
   onSetPreset?: (preset: string) => void;
   presets?: string[];
 }
 
 export const Controls: React.FC<ControlsProps> = ({ 
-  isPlaying, onPlayPause, onReset, bpm, setBpm, onAddChord, onGenerate, onUndo, onRedo, canUndo, canRedo, onOpenLibrary, onOpenMixer, onOpenLyrics, onOpenPedalboard, onOpenLooper, onOpenTheory, onTranspose, onAnalyze, onImportAudio
+  isPlaying, onPlayPause, onReset, bpm, setBpm, onAddChord, onGenerate, onUndo, onRedo, canUndo, canRedo, onOpenLibrary, onOpenMixer, onOpenLyrics, onOpenPedalboard, onOpenLooper, onOpenTheory, onOpenHelp, onOpenJam, onTranspose, onAnalyze, onImportAudio
 }) => {
   const [tapTimes, setTapTimes] = useState<number[]>([]);
+  const [isRecording, setIsRecording] = useState(false);
   
   const handleTap = () => {
       const now = performance.now();
@@ -50,6 +54,22 @@ export const Controls: React.FC<ControlsProps> = ({
       setTapTimes(newTaps);
   };
 
+  const toggleRecording = async () => {
+      if (isRecording) {
+          setIsRecording(false);
+          const url = await stopInputRecording();
+          if (url) {
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = `vibechord-session-${Date.now()}.wav`;
+              a.click();
+          }
+      } else {
+          setIsRecording(true);
+          await startInputRecording();
+      }
+  };
+
   return (
     <div className="fixed bottom-0 left-0 right-0 p-4 bg-background/95 backdrop-blur-xl border-t border-slate-700 flex flex-col md:flex-row items-center justify-between gap-4 z-50 shadow-[0_-10px_40px_rgba(0,0,0,0.4)]">
       
@@ -57,6 +77,14 @@ export const Controls: React.FC<ControlsProps> = ({
       <div className="flex items-center gap-4 flex-shrink-0">
         <button onClick={onPlayPause} className={clsx("flex items-center justify-center w-14 h-14 rounded-full shadow-lg transition-all active:scale-90", isPlaying ? "bg-red-500 shadow-red-900/40" : "bg-primary text-white shadow-green-900/40")}>
             {isPlaying ? <Square size={24} fill="currentColor" /> : <Play size={28} fill="currentColor" className="ml-1" />}
+        </button>
+
+        <button 
+            onClick={toggleRecording} 
+            className={clsx("w-12 h-12 rounded-full border-2 flex items-center justify-center transition-all", isRecording ? "border-red-500 bg-red-900/20" : "border-slate-600 bg-slate-800")}
+            title="Enregistrer (Sortie Master)"
+        >
+            <div className={clsx("rounded-full transition-all", isRecording ? "w-4 h-4 bg-red-500 animate-pulse" : "w-4 h-4 bg-red-700")} />
         </button>
 
         <div className="flex items-center gap-1 bg-slate-800 rounded-full p-1 border border-slate-700">
@@ -79,7 +107,7 @@ export const Controls: React.FC<ControlsProps> = ({
 
       {/* TOOLS & UTILITIES */}
       <div className="flex items-center gap-3 flex-shrink-0 flex-wrap justify-center">
-        <Tooltip content="Paroles"><button onClick={onOpenLyrics} className="p-3 bg-slate-800 text-slate-300 rounded-xl border border-slate-700 hover:text-pink-400 transition-all"><PenTool size={20} /></button></Tooltip>
+        <Tooltip content="Jam Station"><button onClick={onOpenJam} className="p-3 bg-slate-800 text-yellow-400 rounded-xl border border-slate-700 hover:bg-slate-700 transition-all font-bold"><Music2 size={20} /></button></Tooltip>
         <Tooltip content="Analyse IA"><button onClick={onAnalyze} className="p-3 bg-slate-800 text-slate-300 rounded-xl border border-slate-700 hover:text-purple-400 transition-all"><BrainCircuit size={20} /></button></Tooltip>
         <Tooltip content="Transposer -1"><button onClick={() => onTranspose?.(-1)} className="p-3 bg-slate-800 text-slate-300 rounded-xl border border-slate-700 hover:text-white transition-all"><ArrowDown size={20} /></button></Tooltip>
         <Tooltip content="Transposer +1"><button onClick={() => onTranspose?.(1)} className="p-3 bg-slate-800 text-slate-300 rounded-xl border border-slate-700 hover:text-white transition-all"><ArrowUp size={20} /></button></Tooltip>
@@ -90,6 +118,8 @@ export const Controls: React.FC<ControlsProps> = ({
         <Tooltip content="Pédalier FX"><button onClick={onOpenPedalboard} className="p-3 bg-orange-600/20 text-orange-400 border border-orange-500/50 rounded-xl hover:bg-orange-600 hover:text-white transition-all"><Cable size={20} /></button></Tooltip>
         <Tooltip content="Mixer & Sons"><button onClick={onOpenMixer} className="p-3 bg-slate-800 text-cyan-400 rounded-xl border border-slate-700 hover:bg-slate-700 transition-all"><Sliders size={20} /></button></Tooltip>
         <Tooltip content="Générateur IA"><button onClick={onGenerate} className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-xl font-black shadow-lg shadow-purple-900/20 active:scale-95 transition-all"><Wand2 size={18} /> GENERATE</button></Tooltip>
+        <div className="w-[1px] h-8 bg-slate-700 mx-2 hidden lg:block" />
+        <Tooltip content="Aide & Tutos"><button onClick={onOpenHelp} className="p-3 bg-slate-800 text-slate-300 rounded-xl border border-slate-700 hover:text-green-400 transition-all"><HelpCircle size={20} /></button></Tooltip>
       </div>
     </div>
   );

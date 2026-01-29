@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { X, Mic, Guitar, Disc, GraduationCap, Sliders, FolderHeart, Binary, Music, History } from 'lucide-react';
+import { X, Mic, Guitar, Disc, GraduationCap, Sliders, FolderHeart, Binary, Music, History, HelpCircle } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 interface LavaDashboardProps {
@@ -21,6 +21,7 @@ export const LavaDashboard: React.FC<LavaDashboardProps> = ({ isOpen, onClose, o
     { id: 'library', name: 'Dictionnaire', icon: FolderHeart, color: 'from-yellow-400 to-orange-500' },
     { id: 'solfege', name: 'Solfège & Théorie', icon: Binary, color: 'from-teal-400 to-emerald-600' },
     { id: 'import', name: 'Import Audio', icon: Mic, color: 'from-red-400 to-rose-500' },
+    { id: 'welcome', name: 'Aide & Guide', icon: HelpCircle, color: 'from-slate-500 to-slate-700' },
   ];
 
   const container = {

@@ -27,6 +27,7 @@ import { CircleOfFifths } from './components/CircleOfFifths';
 import { SolfegeModal } from './components/SolfegeModal';
 import { VibeBlast } from './components/VibeBlast';
 import { VisionCoachModal } from './components/VisionCoachModal';
+import { BackingTrackModal } from './components/BackingTrackModal'; // New Import
 import { Toast, ToastType } from './components/Toast';
 import { ChordData, GuitarEffects } from './types';
 import { playProgression, stopPlayback, initAudio, updateGuitarEffects } from './services/audioService';
@@ -44,10 +45,52 @@ const TUTORIAL_STEPS: TutorialStep[] = [
     { title: "Coach Vision", desc: "Vérifiez votre position de main via caméra.", position: "top-center", icon: Camera, color: "bg-purple-600" }
 ];
 
+const DEFAULT_FX: GuitarEffects = {
+    noiseGateThreshold: -60,
+    guitarMatch: { enabled: false, source: 'SINGLE_COIL', target: 'HUMBUCKER' },
+    routingMode: 'SINGLE',
+    pathAMix: 1,
+    pathBMix: 0,
+    pathA: {
+        enabled: true,
+        drive: 0,
+        amp: { model: 'CLEAN_TWIN', gain: 0.5, bass: 0, mid: 0, treble: 0, presence: 0, volume: 1, cabModel: '1x12' }
+    },
+    pathB: {
+        enabled: false,
+        drive: 0,
+        amp: { model: 'HIGH_RECTO', gain: 0.5, bass: 0, mid: 0, treble: 0, presence: 0, volume: 1, cabModel: '4x12' }
+    },
+    postFx: {
+        chorus: { enabled: false, depth: 0, rate: 0, mix: 0 },
+        delay: { enabled: false, time: '8n', feedback: 0, mix: 0 },
+        reverb: { enabled: false, decay: 1.5, mix: 0 },
+        eq: { enabled: false, low: 0, mid: 0, high: 0 },
+        order: ['chorus', 'delay', 'reverb', 'eq']
+    },
+    masterGain: 0
+};
+
 const GUITAR_PRESETS: Record<string, GuitarEffects> = {
-    'ACOUSTIC': { ampModel: 'ACOUSTIC_SIM', eq: { low: 2, mid: 0, high: 4 }, distortion: 0, chorus: 0, reverb: 0.15, delay: 0, masterGain: 0 },
-    'CLEAN': { ampModel: 'CLEAN', eq: { low: 0, mid: 0, high: 2 }, distortion: 0, chorus: 0.2, reverb: 0.3, delay: 0.1, masterGain: 0 },
-    'ROCK': { ampModel: 'PLEXI', eq: { low: 2, mid: 4, high: 3 }, distortion: 0.6, chorus: 0, reverb: 0.2, delay: 0, masterGain: -2 },
+    'ACOUSTIC': { 
+        ...DEFAULT_FX,
+        ampModel: 'ACOUSTIC_DREAD', // Legacy prop needed for backward compat if any, but let's sync
+        pathA: { ...DEFAULT_FX.pathA, amp: { ...DEFAULT_FX.pathA.amp, model: 'ACOUSTIC_DREAD' } },
+        postFx: { ...DEFAULT_FX.postFx, reverb: { ...DEFAULT_FX.postFx.reverb, enabled: true, mix: 0.15 }, eq: { ...DEFAULT_FX.postFx.eq, enabled: true, low: 2, high: 4 } }
+    },
+    'CLEAN': { 
+        ...DEFAULT_FX,
+        ampModel: 'CLEAN_TWIN',
+        pathA: { ...DEFAULT_FX.pathA, amp: { ...DEFAULT_FX.pathA.amp, model: 'CLEAN_TWIN' } },
+        postFx: { ...DEFAULT_FX.postFx, chorus: { ...DEFAULT_FX.postFx.chorus, enabled: true, mix: 0.2 }, reverb: { ...DEFAULT_FX.postFx.reverb, enabled: true, mix: 0.3 }, delay: { ...DEFAULT_FX.postFx.delay, enabled: true, mix: 0.1 } }
+    },
+    'ROCK': { 
+        ...DEFAULT_FX,
+        ampModel: 'CRUNCH_PLEXI',
+        pathA: { ...DEFAULT_FX.pathA, drive: 0.6, amp: { ...DEFAULT_FX.pathA.amp, model: 'CRUNCH_PLEXI', gain: 0.8 } },
+        postFx: { ...DEFAULT_FX.postFx, reverb: { ...DEFAULT_FX.postFx.reverb, enabled: true, mix: 0.2 } },
+        masterGain: -2
+    },
 };
 
 function App() {
@@ -68,7 +111,7 @@ function App() {
       mixer: false, import: false, lyrics: false, pedalboard: false,
       dashboard: false, looper: false, browser: false, stage: false, 
       theory: false, solfege: false, coach: false, tutorial: false,
-      riff: false, tuner: false, practice: false
+      riff: false, tuner: false, practice: false, jam: false
   });
 
   const toggleModal = useCallback((key: string, state: boolean) => {
@@ -167,6 +210,7 @@ function App() {
         onOpenMixer={() => toggleModal('mixer', true)} onOpenPedalboard={() => toggleModal('pedalboard', true)}
         onOpenLibrary={() => toggleModal('library', true)} onOpenLyrics={() => toggleModal('lyrics', true)}
         onOpenLooper={() => toggleModal('looper', true)} onOpenTheory={() => toggleModal('theory', true)}
+        onOpenHelp={() => toggleModal('welcome', true)} onOpenJam={() => toggleModal('jam', true)}
         onTranspose={onTranspose} onAnalyze={() => toggleModal('analysis', true)} onImportAudio={() => toggleModal('import', true)}
       />
 
@@ -190,6 +234,7 @@ function App() {
       <LavaDashboard isOpen={modals.dashboard} onClose={() => toggleModal('dashboard', false)} onOpenApp={(id: any) => toggleModal(id, true)} />
       <SolfegeModal isOpen={modals.solfege} onClose={() => toggleModal('solfege', false)} />
       <AudioImportModal isOpen={modals.import} onClose={() => toggleModal('import', false)} currentTrackName={null} onTrackLoaded={() => {}} onChordsTranscribed={setChords} />
+      <BackingTrackModal isOpen={modals.jam} onClose={() => toggleModal('jam', false)} />
       
       {toast && <Toast message={toast.msg} type={toast.type} isVisible={!!toast} onClose={() => setToast(null)} />}
       <SongbookView chords={chords} lyrics={lyrics} bpm={bpm} capo={0} title="Ma Grille VibeChord" />
